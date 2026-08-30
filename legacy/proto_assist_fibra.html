@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Assist-Fibra | Assistente de Campo Telecom</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-color: #0f172a;
+      color: #f8fafc;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+    .abnt-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    .btn-gps {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      transition: all 0.2s;
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen pb-12">
+
+  <!-- Header Profissional -->
+  <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-50 px-4 py-3 shadow-md">
+    <div class="max-w-4xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="bg-emerald-500 text-slate-950 p-2 rounded-lg font-bold">
+          ⚡
+        </div>
+        <div>
+          <h1 class="font-bold text-lg leading-none text-white">Assist-Fibra</h1>
+          <span class="text-xs text-slate-400">Auxiliar de Campo, GPS & ABNT</span>
+        </div>
+      </div>
+      <span class="text-xs bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-full border border-emerald-500/40 font-semibold">
+        Modo Limpo & Profissional
+      </span>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-4 mt-6 space-y-6">
+
+    <!-- BARRA SUPERIOR DE BUSCA E GERENCIAMENTO DE OS -->
+    <section class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-lg space-y-4">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-700 pb-3">
+        <div>
+          <h2 class="text-base font-bold text-slate-100 flex items-center gap-2">
+            🔍 Digite o Código da OS ou Escolha uma Salva
+          </h2>
+          <p class="text-xs text-slate-400">Encontre qualquer Ordem de Serviço pelo código ou limpe para cadastrar uma nova.</p>
+        </div>
+        <button onclick="limparEAdicionarNovaOS()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-lg transition-colors shadow-md whitespace-nowrap">
+          ➕ Importar Nova OS / Print
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div class="sm:col-span-2">
+          <input type="text" id="input-busca-os" placeholder="Digite o Código da OS (ex: 98216 ou 98533)..." class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-sm font-mono font-bold text-emerald-400 focus:outline-none focus:border-emerald-400">
+        </div>
+        <div class="flex gap-2">
+          <button onclick="buscarOSPorCodigo()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-lg transition-colors py-2.5">
+            🔎 Pesquisar
+          </button>
+          <button onclick="resetarTelaParaInicio()" class="px-3 bg-rose-600/30 hover:bg-rose-600/50 text-rose-300 border border-rose-500/40 font-bold text-xs rounded-lg transition-colors py-2.5">
+            🧹 Limpar Tela
+          </button>
+        </div>
+      </div>
+
+      <!-- Lista de OSs Salvas no App -->
+      <div class="pt-2">
+        <span class="text-xs text-slate-400 font-bold block mb-2">📁 Suas OSs Salvas:</span>
+        <div id="container-os-salvas" class="flex flex-wrap gap-2">
+          <!-- Renderizado dinamicamente -->
+        </div>
+      </div>
+    </section>
+
+    <!-- FORMULÁRIO LIMPO DE IMPORTAÇÃO DE NOVA OS -->
+    <section id="secao-nova-os" class="hidden bg-slate-800 border border-amber-500/40 rounded-xl p-5 shadow-lg space-y-4">
+      <div class="border-b border-slate-700 pb-2 flex items-center justify-between">
+        <h3 class="font-bold text-amber-300 text-sm flex items-center gap-2">
+          📥 Cadastrar / Importar Nova Ordem de Serviço
+        </h3>
+        <span class="text-xs text-slate-400">Insira os arquivos ou preencha o código</span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">1. Print do ERP (Imagem)</label>
+          <input type="file" accept="image/*" class="w-full text-xs text-slate-400 bg-slate-900 rounded p-2 border border-slate-700">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">2. PDF ConnectMaster (Rota)</label>
+          <input type="file" accept="application/pdf" class="w-full text-xs text-slate-400 bg-slate-900 rounded p-2 border border-slate-700">
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="salvarSimulacaoNovaOS()" class="px-5 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-lg transition-colors">
+          💾 Salvar OS no App
+        </button>
+      </div>
+    </section>
+
+    <!-- SELETOR LIMPO E ELEGANTE DE ENDEREÇO DA OS -->
+    <div id="painel-os-ativa" class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-lg space-y-4">
+      <div class="border-b border-slate-700 pb-3">
+        <h2 class="text-base font-bold text-slate-100 flex items-center gap-2">
+          📍 OS Ativa: <span id="label-codigo-os" class="text-emerald-400 font-mono">-</span>
+        </h2>
+        <p class="text-xs text-slate-400">Selecione o endereço desejado na lista abaixo para carregar os dados e abrir o GPS:</p>
+      </div>
+
+      <!-- Seletor Dropdown Limpo com Todos os Endereços -->
+      <div>
+        <select id="select-location" onchange="trocarLocal(this.value)" class="w-full bg-slate-900 border border-emerald-500/60 rounded-lg px-4 py-3.5 text-sm text-slate-100 font-semibold focus:outline-none focus:border-emerald-400 transition-colors">
+          <!-- Opções com 100% dos endereços -->
+        </select>
+      </div>
+
+      <!-- Botões de Navegação GPS (Google Maps & Waze) -->
+      <div class="bg-slate-900/90 border border-slate-700 rounded-lg p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div>
+          <span class="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">Endereço Selecionado:</span>
+          <span id="gps-endereco-atual" class="font-bold text-emerald-400 text-sm">-</span>
+        </div>
+        <div class="flex items-center gap-2 w-full sm:w-auto">
+          <a id="link-gmaps" href="#" target="_blank" class="btn-gps bg-blue-600 hover:bg-blue-500 text-white flex-1 sm:flex-none">
+            🗺️ Abrir Google Maps
+          </a>
+          <a id="link-waze" href="#" target="_blank" class="btn-gps bg-cyan-500 hover:bg-cyan-400 text-slate-950 flex-1 sm:flex-none">
+            🚗 Abrir Waze
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAINEL PRINCIPAL DE RESULTADOS -->
+    <div id="app-results" class="space-y-6">
+
+      <!-- Grid de Informações Alinhadas -->
+      <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <!-- Card 1: Dados do Switch e OS -->
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-lg space-y-4">
+          <div class="border-b border-slate-700 pb-3 flex items-center justify-between">
+            <h3 class="font-bold text-slate-200 text-sm flex items-center gap-2">
+              🖥️ Equipamento & Switch (Print ERP)
+            </h3>
+            <span id="badge-os-num" class="text-[10px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded font-mono font-bold">-</span>
+          </div>
+
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between py-1 border-b border-slate-700/50">
+              <span class="text-slate-400">Rack / DGO:</span>
+              <span id="res-rack" class="font-semibold text-slate-100 font-mono text-right text-xs">-</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-slate-700/50">
+              <span class="text-slate-400">Slot / Módulo:</span>
+              <span id="res-slot" class="font-bold text-emerald-400 font-mono">-</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-slate-700/50">
+              <span class="text-slate-400">Porta do Switch:</span>
+              <span id="res-porta" class="font-bold text-emerald-400 font-mono">-</span>
+            </div>
+            <div class="flex justify-between py-1">
+              <span class="text-slate-400">IP do Switch:</span>
+              <span id="res-ip" class="font-semibold text-slate-300 font-mono">-</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Detalhes do Trecho Óptico -->
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-lg space-y-4">
+          <div class="border-b border-slate-700 pb-3 flex items-center justify-between">
+            <h3 class="font-bold text-slate-200 text-sm flex items-center gap-2">
+              🔌 Caixa CEO & Cabo Selecionado
+            </h3>
+            <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-mono font-bold">ConnectMaster PDF</span>
+          </div>
+
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between py-1 border-b border-slate-700/50">
+              <span class="text-slate-400">Componente / Caixa:</span>
+              <span id="res-caixa" class="font-semibold text-slate-100 text-right">-</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-slate-700/50">
+              <span class="text-slate-400">Cabo de Entrada/Saída:</span>
+              <span id="res-cabo" class="font-semibold text-slate-200 font-mono text-right">-</span>
+            </div>
+            <div class="flex justify-between py-1">
+              <span class="text-slate-400">Ponto / Conexão:</span>
+              <span id="res-ponto" class="font-bold text-amber-400 font-mono">-</span>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Painel Principal de Cores ABNT -->
+      <section class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-xl space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+          <h3 class="font-bold text-slate-100 text-base flex items-center gap-2">
+            🎨 Identificação de Cores ABNT (NBR 14771)
+          </h3>
+          <div class="flex items-center gap-2">
+            <label class="text-xs text-slate-300 font-bold">Nº Fibra:</label>
+            <input type="number" id="input-fibra-num" oninput="calcularCoresABNT(this.value)" value="1" min="1" max="144" class="w-20 bg-slate-900 border border-emerald-500/50 rounded px-2 py-1 text-center font-mono text-base font-bold text-emerald-400 focus:outline-none focus:border-emerald-400">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+          
+          <!-- Tubo / Grupo -->
+          <div class="bg-slate-900/90 border border-slate-700 rounded-lg p-4 flex items-center justify-between">
+            <div>
+              <span class="text-xs text-slate-400 block mb-1 font-semibold">Grupo / Tubo Loose</span>
+              <span id="abnt-grupo-nome" class="font-bold text-base text-slate-100">Grupo 1</span>
+            </div>
+            <div id="badge-grupo" class="abnt-badge" style="background-color: #00A859; color: #ffffff;">
+              <span id="abnt-grupo-cor">VERDE</span>
+            </div>
+          </div>
+
+          <!-- Fibra / Via -->
+          <div class="bg-slate-900/90 border border-slate-700 rounded-lg p-4 flex items-center justify-between">
+            <div>
+              <span class="text-xs text-slate-400 block mb-1 font-semibold">Fibra / Via de Sinal</span>
+              <span id="abnt-fibra-nome" class="font-bold text-base text-slate-100">Fibra 1 (Global 1)</span>
+            </div>
+            <div id="badge-fibra" class="abnt-badge" style="background-color: #00A859; color: #ffffff;">
+              <span id="abnt-fibra-cor">VERDE</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </div>
+
+  </main>
+
+  <script>
+    const CORES_ABNT = [
+      { id: 1, nome: "VERDE", hex: "#00A859", textDark: false },
+      { id: 2, nome: "AMARELO", hex: "#FFF200", textDark: true },
+      { id: 3, nome: "BRANCO", hex: "#FFFFFF", textDark: true },
+      { id: 4, nome: "AZUL", hex: "#00AEEF", textDark: false },
+      { id: 5, nome: "VERMELHO", hex: "#ED1C24", textDark: false },
+      { id: 6, nome: "VIOLETA", hex: "#92278F", textDark: false },
+      { id: 7, nome: "MARROM", hex: "#8C6239", textDark: false },
+      { id: 8, nome: "ROSA", hex: "#EC008C", textDark: false },
+      { id: 9, nome: "PRETO", hex: "#18181b", textDark: false },
+      { id: 10, nome: "CINZA", hex: "#808285", textDark: false },
+      { id: 11, nome: "LARANJA", hex: "#F7941E", textDark: false },
+      { id: 12, nome: "AQUA", hex: "#00A79D", textDark: false }
+    ];
+
+    // BANCO COMPLETO EXTRAÍDO LETRA POR LETRA DOS PDFS DO CONNECTMASTER & PRINT ERP
+    const BANCO_OSS = [
+      {
+        codigoOS: "98216",
+        cliente: "CDI BARRA PRODUCOS - IMPORTACAO E EXPORTACAO LTDA",
+        rack: "Rack 44U-RJO-152>01<DGO-144F-RJO-016",
+        slot: "1",
+        porta: "1/1/9",
+        ip: "10.10.8.233",
+        rotas: [
+          { rua: "Rua Ipadu, 520 - Jacarepaguá", componente: "TOA 2F-97966 - CDI BARRA PRODUCAO", cabo: "12F-9858 - Ipadu 520-01 (12 FO)", ponto: "Fibra01" },
+          { rua: "Rua Ipadu, 521 - Jacarepaguá", componente: "CEO-RJO-1293>1<Bandeja 144F", cabo: "12F-RJO-2333 (12 FO)", ponto: "Fibra03" },
+          { rua: "Rua Ipadu, 779 - Jacarepaguá", componente: "CEO-RJO-2543>1<Bandeja 144F", cabo: "12F-RJO-2273 (12 FO)", ponto: "Fibra03" },
+          { rua: "Rua Ipadu, 415 - Jacarepaguá", componente: "CEO-RJO-2272>1<Bandeja 12F", cabo: "12F-RJO-2274 (12 FO)", ponto: "03" },
+          { rua: "Rodrigues Caldas, 1613 - Taquara", componente: "CEO-RJO-2273>1<Bandeja 12F", cabo: "12F-RJO-6316 (12 FO)", ponto: "03" },
+          { rua: "Rodrigues Caldas, 1333 - Taquara", componente: "CEO-RJO-6315>1<Bandeja 144F", cabo: "12F-RJO-1591 (12 FO)", ponto: "Fibra03" },
+          { rua: "Rua Mapuá, 173 - Taquara", componente: "CEO-RJO-1590>1<Bandeja 144F", cabo: "12F-RJO-1592 (12 FO)", ponto: "Fibra03" },
+          { rua: "Rua Mapuá, 299 - Taquara", componente: "CEO-RJO-1589>1<Bandeja 144F", cabo: "12F-RJO-1425 (12 FO)", ponto: "Fibra03" },
+          { rua: "Rua Mapuá / Correio do Rio", componente: "CEO-RJO-1424>1<Bandeja 144F", cabo: "12F-RJO-1283 (12 FO)", ponto: "Fibra03" },
+          { rua: "Estrada Mapuá, 742 - Taquara", componente: "CEO-RJO-0667>1<Bandeja 144F", cabo: "48F-RJO-0619 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada do Guerenguê, 1304 - Jacarepaguá", componente: "CEO-RJO-1596>1<Bandeja 144F", cabo: "48F-RJO-1597 (48 FO)", ponto: "G1-F8" },
+          { rua: "Rua Cônego Felipe, 975 - Taquara", componente: "CEO-RJO-1595>1<Bandeja 144F", cabo: "48F-RJO-1598 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada do Guerenguê, 1098 - Jacarepaguá", componente: "CEO-RJO-1134>1<Bandeja 144F", cabo: "48F-RJO-1135 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada do Guerenguê, 871 - Jacarepaguá", componente: "CEO-RJO-5689>1<Bandeja 144F", cabo: "48F-RJO-5781 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada do Guerenguê, 938 - Jacarepaguá", componente: "CEO-RJO-1135>1<Bandeja 144F", cabo: "48F-RJO-1136 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada do Guerenguê, 1084 - Jacarepaguá", componente: "CEO-RJO-6289>1<Bandeja 144F", cabo: "48F-RJO-6290 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada do Guerenguê, 701 - Jacarepaguá", componente: "CEO-RJO-3354>1<Bandeja 144F", cabo: "48F-RJO-3355 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada do Guerenguê, 716 - Jacarepaguá", componente: "CEO-RJO-2027>1<Bandeja 144F", cabo: "48F-RJO-2028 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada do Guerenguê, 630 - Jacarepaguá", componente: "CEO-RJO-3501>1<Bandeja 144F", cabo: "48F-RJO-3502 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada do Guerenguê, 670 - Jacarepaguá", componente: "CEO-RJO-1313>1<Bandeja 144F", cabo: "48F-RJO-1323 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada do Guerenguê, 580 - Jacarepaguá", componente: "CEO-RJO-1166>1<Bandeja 144F", cabo: "48F-RJO-1168 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada do Guerenguê, 300 - Jacarepaguá", componente: "CEO-RJO-0670>1<Bandeja 144F", cabo: "48F-RJO-0623 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada do Guerenguê, 166 - Jacarepaguá", componente: "CEO-RJO-2351>1<Bandeja 144F", cabo: "48F-RJO-2352 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada do Guerenguê, 195 - Jacarepaguá", componente: "CEO-RJO-2352>1<Bandeja 144F", cabo: "48F-RJO-2353 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada do Guerenguê, 150 - Jacarepaguá", componente: "CEO-RJO-3816>1<Bandeja 144F", cabo: "48F-RJO-3819 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada do Guerenguê, 163 - Jacarepaguá", componente: "CEO-RJO-2903>1<Bandeja 144F", cabo: "48F-RJO-2905 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada do Guerenguê, 78 - Jacarepaguá", componente: "CEO-RJO-0757>1<Bandeja 144F", cabo: "48F-RJO-0706 (48 FO)", ponto: "G1-F8" },
+          { rua: "Av. das Bandeirantes, 1000 - Taquara", componente: "CEO-RJO-0580>1<Bandeja 144F", cabo: "48F-RJO-1206 (48 FO)", ponto: "G1-F8" },
+          { rua: "Av. das Bandeirantes, 850 - Taquara", componente: "CEO-RJO-1205>1<Bandeja 144F", cabo: "48F-RJO-1207 (48 FO)", ponto: "G1-F8" },
+          { rua: "Av. das Bandeirantes, 838 - Taquara", componente: "CEO-RJO-1206>1<Bandeja 144F", cabo: "48F-RJO-0747 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada André Rocha, 1265 - Taquara", componente: "CEO-RJO-0830>1<Bandeja 144F", cabo: "48F-RJO-2658 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada André Rocha, 1083 - Taquara", componente: "CEO-RJO-2657>1<Bandeja 144F", cabo: "48F-RJO-2600 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada André Rocha, 1050 - Taquara", componente: "CEO-RJO-2598>1<Bandeja 144F", cabo: "48F-RJO-2599 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada André Rocha, 1028 - Taquara", componente: "CEO-RJO-2597>1<Bandeja 144F", cabo: "48F-RJO-0256 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada do Tindiba, 1777 - Taquara", componente: "CEO-RJO-0704>1<Bandeja 144F", cabo: "48F-RJO-2804 (48 FO)", ponto: "G1-F8" },
+          { rua: "Tindiba / André Rocha - Taquara", componente: "CEO-RJO-2801>1<Bandeja 144F", cabo: "48F-RJO-2805 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada André Rocha, 949 - Taquara", componente: "CEO-RJO-2802>1<Bandeja 144F", cabo: "48F-RJO-2700 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada André Rocha, 905 - Taquara", componente: "CEO-RJO-2696>1<Bandeja 144F", cabo: "48F-RJO-2699 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada André Rocha, 887 - Taquara", componente: "CEO-RJO-2698>1<Bandeja 144F", cabo: "48F-RJO-5773 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada André Rocha, 877 - Taquara", componente: "CEO-RJO-5676>1<Bandeja 144F", cabo: "48F-RJO-3732 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada André Rocha, 851 - Taquara", componente: "CEO-RJO-3731>1<Bandeja 144F", cabo: "48F-RJO-3731 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada André Rocha, 777 - Taquara", componente: "CEO-RJO-3729>1<Bandeja 144F", cabo: "48F-RJO-2898 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada André Rocha, 627 - Taquara", componente: "CEO-RJO-2897>1<Bandeja 48F", cabo: "48F-RJO-2105 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada André Rocha, 547 - Taquara", componente: "CEO-RJO-2102>1<Bandeja 144F", cabo: "48F-RJO-2104 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada André Rocha, 519 - Taquara", componente: "CEO-RJO-2103>1<Bandeja 144F", cabo: "48F-RJO-5225 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada André Rocha, 505 - Taquara", componente: "CEO-RJO-4909>1<Bandeja 144F", cabo: "48F-RJO-3185 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada André Rocha, 495 - Taquara", componente: "CEO-RJO-3184>1<Bandeja 144F", cabo: "48F-RJO-5226 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada André Rocha, 421 - Taquara", componente: "CEO-RJO-4910>1<Bandeja 144F", cabo: "48F-RJO-4000 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada André Rocha, 386 - Taquara", componente: "CEO-RJO-3998>1<Bandeja 144F", cabo: "48F-RJO-4424 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada André Rocha, 103 - Taquara", componente: "CEO-RJO-4423>1<Bandeja 144F", cabo: "48F-RJO-0784 (48 FO)", ponto: "G1-F8" },
+          { rua: "Rua Nelson Cardoso, 309 - Taquara", componente: "CEO-RJO-0864>1<Bandeja 144F", cabo: "48F-RJO-5900 (48 FO)", ponto: "G1-F8" },
+          { rua: "Rua Nelson Cardoso, 185 - Taquara", componente: "CEO-RJO-5874>1<Bandeja 144F", cabo: "48F-RJO-5219 (48 FO)", ponto: "G1-F8" },
+          { rua: "Rua Nelson Cardoso, 93 - Taquara", componente: "CEO-RJO-4898>1<Bandeja 144F", cabo: "48F-RJO-0700 (48 FO)", ponto: "G1-F8" },
+          { rua: "Av. Cândido Benício, 4075 - Seca", componente: "CEO-RJO-0748>1<Bandeja 144F", cabo: "48F-RJO-1490 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada Geremário Dantas, 289 - Pechincha", componente: "CEO-RJO-1569>1<Bandeja 144F", cabo: "48F-RJO-1572 (48 FO)", ponto: "G1-F8" },
+          { rua: "Estrada Geremário Dantas, 340 - Pechincha", componente: "CEO-RJO-1489>1<Bandeja 144F", cabo: "48F-RJO-6062 (48 FO)", ponto: "G1-F8" },
+          { rua: "Rua Lobo Saraiva, 179 - Jacarepaguá", componente: "CEO-RJO-6113>1<Bandeja 144F", cabo: "48F-5992 - Mix Mall-01", ponto: "G1-F8" },
+          { rua: "Estrada do Tindiba, 179 - Pechincha", componente: "Rack 44U-RJO-152>01<DGO-144F-RJO-016", cabo: "TOA CDI BARRA PRODUCOS", ponto: "S9-P08" }
+        ]
+      },
+      {
+        codigoOS: "98533",
+        cliente: "SPDM - ASSOCIAÇÃO PAULISTA PARA O DESENVOLVIMENTO DA MEDICINA",
+        rack: "Rack 44U-RJO-204>03<DGO-144F (3U)-RJO-029",
+        slot: "2",
+        porta: "S2-P07",
+        ip: "10.10.14.50",
+        rotas: [
+          { rua: "Engenho D'Água 1330 - Anil", componente: "Rack 44U-RJO-204>03<DGO-144F (3U)-RJO-029", cabo: "48F-3918 - Barki-01", ponto: "S2-P07" },
+          { rua: "Engenho D'Água 1333 - Anil", componente: "CEO-RJO-2790>1<Bandeja 144F", cabo: "48F-RJO-2792", ponto: "19" },
+          { rua: "Engenho D'Água 1038 - Anil", componente: "CEO-RJO-4560>1<Bandeja 144F", cabo: "48F-RJO-4562", ponto: "19" },
+          { rua: "Engenho D'Água 1295 (Frente Shelter)", componente: "CEO-RJO-3242>1<Bandeja 144F", cabo: "48F-RJO-3243", ponto: "19" },
+          { rua: "Engenho D'Água 1258 - Anil", componente: "CEO-RJO-4561>1<Bandeja 144F", cabo: "48F-RJO-4563", ponto: "19" },
+          { rua: "Engenho D'Água 1225 - Anil", componente: "CEO-RJO-3710>1<Bandeja 144F", cabo: "48F-RJO-3711", ponto: "19" },
+          { rua: "Engenho D'Água 1215 - Anil", componente: "CEO-RJO-3339>1<Bandeja 144F", cabo: "48F-RJO-3340", ponto: "44" },
+          { rua: "Engenho D'Água 1207 - Anil", componente: "CEO-RJO-3340>1<Bandeja 144F", cabo: "48F-RJO-3341", ponto: "19" },
+          { rua: "Engenho D'Água 560 - Anil", componente: "CEO-RJO-5467>1<Bandeja 144F", cabo: "48F-RJO-5628", ponto: "19" },
+          { rua: "Engenho D'Água 148 - Anil", componente: "CEO-RJO-5976>1<Bandeja 144F", cabo: "48F-RJO-5961", ponto: "19" },
+          { rua: "Estrada de Jacarepaguá 6218", componente: "CEO-RJO-0703>1<Bandeja 144F", cabo: "48F-RJO-3151", ponto: "31" },
+          { rua: "Estrada de Jacarepaguá 6550", componente: "CEO-RJO-3148>1<Bandeja 144F", cabo: "48F-RJO-3150", ponto: "28" },
+          { rua: "Estrada de Jacarepaguá 6910 (Nova)", componente: "CEO-RJO-3149>1<Bandeja 144F", cabo: "48F-RJO-4398", ponto: "109" },
+          { rua: "Rua Ituverava 198 - Anil", componente: "CEO-RJO-4393>1<Bandeja 144F", cabo: "48F-RJO-3152", ponto: "19" },
+          { rua: "Ituverava / Alcides Lima - Anil", componente: "CEO-RJO-3150>1<Bandeja 144F", cabo: "48F-RJO-3149", ponto: "19" },
+          { rua: "Alcides Lima (Calçada oposta 77)", componente: "CEO-RJO-0004>1<Bandeja 144F", cabo: "48F-RJO-3286", ponto: "19" },
+          { rua: "Rua Potiguara 149 - Freguesia", componente: "CEO-RJO-3285>1<Bandeja 144F", cabo: "48F-RJO-0653", ponto: "19" },
+          { rua: "Potiguara c/ Jacarepaguá", componente: "CEO-RJO-0701>1<Bandeja 144F", cabo: "48F-RJO-6041", ponto: "19" },
+          { rua: "Estrada de Jacarepaguá 7544", componente: "CEO-RJO-6087>1<Bandeja 144F", cabo: "48F-RJO-2297", ponto: "19" },
+          { rua: "Estrada de Jacarepaguá 7704", componente: "CEO-RJO-2296>1<Bandeja 144F", cabo: "48F-RJO-2214", ponto: "19" },
+          { rua: "Jacarepaguá / Tirol (Próx. Itaú)", componente: "CEO-RJO-2213>1<Bandeja 144F", cabo: "48F-RJO-0003", ponto: "19" },
+          { rua: "Estrada de Jacarepaguá 7818", componente: "CEO-RJO-0003>1<Bandeja 144F", cabo: "48F-RJO-0564", ponto: "19" },
+          { rua: "Estrada de Jacarepaguá 7708", componente: "CEO-RJO-0618>1<Bandeja 144F", cabo: "48F-RJO-0563", ponto: "19" },
+          { rua: "Pça Prof. Camisão c/ Jacarepaguá", componente: "CEO-RJO-0617>1<Bandeja 144F", cabo: "48F-RJO-0002", ponto: "19" },
+          { rua: "Gabinal / Praça Professora Camisão", componente: "CEO-RJO-0002>1<Bandeja 144F", cabo: "48F-RJO-1366", ponto: "100" },
+          { rua: "Rua Três Rios 20 - Freguesia", componente: "CEO-RJO-2611>1<Bandeja 144F", cabo: "48F-RJO-2614", ponto: "100" },
+          { rua: "Rua Três Rios 74 - Freguesia", componente: "CEO-RJO-2612>1<Bandeja 144F", cabo: "48F-RJO-2613", ponto: "19" },
+          { rua: "Rua Três Rios 90 - Freguesia", componente: "CEO-RJO-1722>1<Bandeja 144F", cabo: "48F-RJO-1723", ponto: "19" },
+          { rua: "Rua Três Rios 176 - Freguesia", componente: "CEO-RJO-1725>1<Bandeja 144F", cabo: "48F-RJO-1726", ponto: "19" },
+          { rua: "Rua Xingú / Três Rios 279", componente: "CEO-RJO-5260>1<Bandeja 144F", cabo: "48F-RJO-5493", ponto: "19" },
+          { rua: "Rua Três Rios 321 / Xingú", componente: "CEO-RJO-5261>1<Bandeja 144F", cabo: "48F-RJO-5494", ponto: "19" },
+          { rua: "Rua Três Rios 646 - Freguesia", componente: "CEO-RJO-1362>1<Bandeja 144F", cabo: "48F-RJO-1367", ponto: "19" },
+          { rua: "Rua dos Três Rios 830 - Freguesia", componente: "CEO-RJO-6438>1<Bandeja 144F", cabo: "48F-RJO-7080", ponto: "19" },
+          { rua: "Rua dos Três Rios 840 - Freguesia", componente: "CEO-RJO-6439>1<Bandeja 144F", cabo: "48F-RJO-7081", ponto: "19" },
+          { rua: "Rua dos Três Rios 920 - Freguesia", componente: "CEO-RJO-5983>1<Bandeja 144F", cabo: "48F-RJO-5965", ponto: "19" },
+          { rua: "Rua dos Três Rios 958 - Freguesia", componente: "CEO-RJO-5982>1<Bandeja 144F", cabo: "48F-RJO-5964", ponto: "19" },
+          { rua: "Rua dos Três Rios 1200 - Freguesia", componente: "CEO-RJO-1369>1<Bandeja 144F", cabo: "12F-RJO-1335", ponto: "37" },
+          { rua: "Rua dos Três Rios 1770 - Freguesia", componente: "CEO-RJO-1337>1<Bandeja 144F", cabo: "12F-RJO-2276", ponto: "11" },
+          { rua: "Rua dos Três Rios 2141 - Freguesia", componente: "CEO-RJO-2658>1<Bandeja 144F", cabo: "12F-RJO-2659", ponto: "11" },
+          { rua: "Rua dos Três Rios 2100 - Freguesia", componente: "CEO-RJO-3829>1<Bandeja 12F", cabo: "12F-RJO-3830", ponto: "11" },
+          { rua: "Rua dos Três Rios (22°55'50.76\"S 43°19'28.02\"W)", componente: "CEO-RJO-2275>1<Bandeja 144F", cabo: "12F-RJO-7967", ponto: "11" },
+          { rua: "Rua Rugendas 31 - Freguesia", componente: "CEO-RJO-6467>1<Bandeja 12F", cabo: "12F-RJO-7992", ponto: "02" },
+          { rua: "Rua dos Três Rios 2361 - Freguesia", componente: "CEO-RJO-6516>1<Bandeja 144F", cabo: "12F-RJO-7993", ponto: "2" },
+          { rua: "Rua dos Três Rios 2361 (Ao lado)", componente: "CEO-RJO-6517>1<Bandeja 144F", cabo: "12F-9712 - Hosp. Cardoso Fontes", ponto: "2" },
+          { rua: "Rua Menezes Cortes 3245 - Freguesia", componente: "TOA 2F-98533 - SPDM MEDICINA", cabo: "Fibra02 - Cardoso Fontes", ponto: "1" }
+        ]
+      }
+    ];
+
+    let osAtiva = BANCO_OSS[0];
+
+    function inicializar() {
+      renderizarBotoesOSSalvas();
+      carregarOS(BANCO_OSS[0]);
+    }
+
+    function renderizarBotoesOSSalvas() {
+      const container = document.getElementById("container-os-salvas");
+      container.innerHTML = "";
+
+      BANCO_OSS.forEach((os) => {
+        const btn = document.createElement("button");
+        btn.onclick = () => carregarOS(os);
+        btn.className = "px-3 py-1.5 bg-slate-900 hover:bg-slate-700 border border-slate-600 rounded-lg text-xs font-mono text-emerald-400 font-bold flex items-center gap-1.5 transition-colors";
+        btn.innerHTML = `📄 OS #${os.codigoOS} (${os.rotas.length} Locais)`;
+        container.appendChild(btn);
+      });
+    }
+
+    function carregarOS(os) {
+      osAtiva = os;
+      document.getElementById("secao-nova-os").classList.add("hidden");
+      document.getElementById("painel-os-ativa").classList.remove("hidden");
+      document.getElementById("app-results").classList.remove("hidden");
+
+      // Atualizar Labels
+      document.getElementById("label-codigo-os").textContent = `OS #${os.codigoOS} - ${os.cliente}`;
+      document.getElementById("badge-os-num").textContent = `OS #${os.codigoOS}`;
+
+      document.getElementById("res-rack").textContent = os.rack;
+      document.getElementById("res-slot").textContent = os.slot;
+      document.getElementById("res-porta").textContent = os.porta;
+      document.getElementById("res-ip").textContent = os.ip;
+
+      // Preencher o Select Dropdown com TODOS os 58 endereços
+      const select = document.getElementById("select-location");
+      select.innerHTML = "";
+
+      os.rotas.forEach((item, index) => {
+        const opt = document.createElement("option");
+        opt.value = index;
+        opt.textContent = `${index + 1}. ${item.rua} — [Caixa: ${item.componente}]`;
+        select.appendChild(opt);
+      });
+
+      trocarLocal(0);
+      calcularCoresABNT(1);
+    }
+
+    function buscarOSPorCodigo() {
+      const codigo = document.getElementById("input-busca-os").value.trim();
+      if (!codigo) {
+        alert("Por favor, digite o número ou código da OS!");
+        return;
+      }
+
+      const osEncontrada = BANCO_OSS.find(o => o.codigoOS.includes(codigo) || o.cliente.toLowerCase().includes(codigo.toLowerCase()));
+      if (osEncontrada) {
+        carregarOS(osEncontrada);
+      } else {
+        alert(`Nenhuma OS salva com o código "${codigo}". Crie uma nova clicando em "+ Importar Nova OS".`);
+      }
+    }
+
+    function resetarTelaParaInicio() {
+      document.getElementById("input-busca-os").value = "";
+      document.getElementById("secao-nova-os").classList.add("hidden");
+      carregarOS(BANCO_OSS[0]);
+    }
+
+    function limparEAdicionarNovaOS() {
+      document.getElementById("secao-nova-os").classList.remove("hidden");
+      document.getElementById("secao-nova-os").scrollIntoView({ behavior: "smooth" });
+    }
+
+    function salvarSimulacaoNovaOS() {
+      const novocodigo = "9900" + (BANCO_OSS.length + 1);
+      const novaOSObj = {
+        codigoOS: novocodigo,
+        cliente: "NOVO CLIENTE CADASTRADO - CAMPO",
+        rack: "Rack 44U-RJO-999>01<DGO-144F",
+        slot: "1",
+        porta: "1/1/1",
+        ip: "10.10.99.1",
+        rotas: [
+          { rua: "Av. das Américas, 5000 - Barra da Tijuca", componente: "CEO-RJO-9999>1<Bandeja 144F", cabo: "48F-RJO-9999 (48 FO)", ponto: "G1-F1" }
+        ]
+      };
+
+      BANCO_OSS.push(novaOSObj);
+      renderizarBotoesOSSalvas();
+      carregarOS(novaOSObj);
+      alert(`OS #${novocodigo} salva no seu histórico do app com sucesso!`);
+    }
+
+    function trocarLocal(index) {
+      if (!osAtiva || !osAtiva.rotas[index]) return;
+      const trecho = osAtiva.rotas[index];
+      
+      document.getElementById("res-caixa").textContent = trecho.componente;
+      document.getElementById("res-cabo").textContent = trecho.cabo;
+      document.getElementById("res-ponto").textContent = trecho.ponto;
+      document.getElementById("gps-endereco-atual").textContent = trecho.rua;
+
+      const queryRua = encodeURIComponent(trecho.rua + ", Rio de Janeiro");
+      document.getElementById("link-gmaps").href = `https://maps.google.com/?q=${queryRua}`;
+      document.getElementById("link-waze").href = `https://waze.com/ul?q=${queryRua}&navigate=yes`;
+      
+      document.getElementById("select-location").value = index;
+    }
+
+    function calcularCoresABNT(val) {
+      const numeroFibra = parseInt(val) || 1;
+      const grupoNum = Math.ceil(numeroFibra / 12);
+      const fibraNum = ((numeroFibra - 1) % 12) + 1;
+
+      const corGrupo = CORES_ABNT[(grupoNum - 1) % 12];
+      const corFibra = CORES_ABNT[(fibraNum - 1) % 12];
+
+      document.getElementById("abnt-grupo-nome").textContent = `Grupo ${grupoNum}`;
+      document.getElementById("abnt-grupo-cor").textContent = corGrupo.nome;
+      
+      document.getElementById("abnt-fibra-nome").textContent = `Fibra ${fibraNum} (Global ${numeroFibra})`;
+      document.getElementById("abnt-fibra-cor").textContent = corFibra.nome;
+
+      estilarBadge("badge-grupo", corGrupo);
+      estilarBadge("badge-fibra", corFibra);
+    }
+
+    function estilarBadge(elementId, corObj) {
+      const badge = document.getElementById(elementId);
+      if (badge) {
+        badge.style.backgroundColor = corObj.hex;
+        badge.style.color = corObj.textDark ? "#090d16" : "#ffffff";
+      }
+    }
+
+    window.onload = inicializar;
+  </script>
+</body>
+</html>
