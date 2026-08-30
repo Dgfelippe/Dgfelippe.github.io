@@ -18,6 +18,7 @@ describe('ServiceOrderSchema', () => {
       updatedAt: '2026-08-30T12:00:00.000Z',
       rawErpText: 'texto ERP',
       rawRouteText: 'texto ConnectMaster',
+      erpDetails: { serviceType: 'CLIENTES - REATIVO DADOS', customerIp: '10.21.1.1', instructions: 'Testar enlace' },
       warnings: [],
       segments: [{
         sequence: 0,
@@ -30,6 +31,8 @@ describe('ServiceOrderSchema', () => {
     })
 
     expect(parsed.segments[0].sequence).toBe(0)
+    expect(parsed.erpDetails?.serviceType).toBe('CLIENTES - REATIVO DADOS')
+    expect(parsed.erpDetails?.customerIp).toBe('10.21.1.1')
   })
 
   it('rejects an order without a code or route segment address', () => {
@@ -46,5 +49,12 @@ describe('ServiceOrderSchema', () => {
     })
 
     expect(parsed.segments).toEqual([])
+  })
+
+  it('keeps an endpoint that has no outgoing cable', () => {
+    expect(() => ServiceOrderSchema.shape.segments.parse([{
+      sequence: 0, address: 'R2 - Américas 500', component: '48F-RJO-2513',
+      cable: '', point: 'G3-F12', opticalLengthMeters: 17681.43,
+    }])).not.toThrow()
   })
 })

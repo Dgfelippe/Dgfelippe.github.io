@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseConnectMasterText } from './connectMaster'
+import { parseConnectMasterText, parseOrderCodeFromFilename } from './connectMaster'
 
 const REPORT_98216 = `
 ConnectMaster - Relatório de Rota Óptica
@@ -53,10 +53,10 @@ describe('ConnectMaster parser', () => {
     })
   })
 
-  it('reports incomplete components instead of inventing cable data', () => {
+  it('preserves incomplete components without inventing cable data', () => {
     const result = parseConnectMasterText('Rua Sem Saída, 55 CEO-RJO-0099 Fibra08 10')
 
-    expect(result.segments).toEqual([])
+    expect(result.segments[0]).toMatchObject({ component: 'CEO-RJO-0099', cable: '' })
     expect(result.warnings[0]).toContain('CEO-RJO-0099')
   })
 
@@ -65,5 +65,35 @@ describe('ConnectMaster parser', () => {
 
     expect(result.segments).toEqual([])
     expect(result.warnings).toContain('Nenhum trecho de rota foi reconhecido no relatório.')
+  })
+
+  it('parses real ConnectMaster lines with long components, spaced cables and final rack', () => {
+    const result = parseConnectMasterText(`
+P/C:1 PontoDescrição Cam. Físico Estado do Caminho Físico Circuito P/C:1 RIO DE JANEIRO RIO DE JANEIRO Ipadu 520 TOA 2F-97966 - CDI BARRA PRODUTOS - IMPORTACAO E EXPORTACAO LTDA 1 0.00
+12F-9858 - Ipadu 520-01 Fibra01 81.27
+RIO DE JANEIRO RIO DE JANEIRO IPADU 521 CEO-RJO-1293>1<Bandeja 144F 3 81.27
+48F-5992 - Mix Mall-01 G1-F8 9,308.92
+97966 - CDI BARRA PRODUTOS - MA 200M RIO DE JANEIRO RIO DE JANEIRO Tindiba 179 Rack 44U-RJO-152>01<DGO-144F-RJO-016 S9-P08 9,308.92
+    `)
+
+    expect(result.segments).toHaveLength(3)
+    expect(result.segments[0]).toMatchObject({ address: 'Ipadu 520', component: 'TOA 2F-97966 - CDI BARRA PRODUTOS - IMPORTACAO E EXPORTACAO LTDA', cable: '12F-9858 - Ipadu 520-01', point: 'Fibra01', opticalLengthMeters: 81.27 })
+    expect(result.segments[1]).toMatchObject({ component: 'CEO-RJO-1293>1<Bandeja 144F', cable: '48F-5992 - Mix Mall-01', point: 'G1-F8', opticalLengthMeters: 9308.92 })
+    expect(result.segments[2]).toMatchObject({ address: 'Tindiba 179', component: 'Rack 44U-RJO-152>01<DGO-144F-RJO-016', cable: '', point: 'S9-P08', opticalLengthMeters: 9308.92 })
+  })
+
+  it('keeps a route endpoint represented by a cable component', () => {
+    const result = parseConnectMasterText('RIO DE JANEIRO RIO DE JANEIRO Rua São Miguel 11 12F-5722 - Rua São Miguel 11-02 Fibra01 636.93')
+    expect(result.segments[0]).toMatchObject({ address: 'Rua São Miguel 11', component: '12F-5722 - Rua São Miguel 11-02', point: 'Fibra01' })
+  })
+
+  it('uses the OS number from the imported PDF filename when the report omits it', () => {
+    expect(parseOrderCodeFromFilename('98216_CDI_BARRA_MA_200M.pdf')).toBe('98216')
+    expect(parseOrderCodeFromFilename('rota-sem-os.pdf')).toBeNull()
+  })
+
+  it('does not confuse the end of an address word with an OS label', () => {
+    expect(parseConnectMasterText('RIO DE JANEIRO RIO DE JANEIRO DOS TRÊS RIOS 1200 CEO-RJO-1369>1<Bandeja 144F 37 6,329.57').orderCode).toBeNull()
+    expect(parseConnectMasterText('RIO DE JANEIRO RIO DE JANEIRO ÉDISON PASSOS 1142 CEO-RJO-0526>1<Bandeja 144F 26 3,419.78').orderCode).toBeNull()
   })
 })

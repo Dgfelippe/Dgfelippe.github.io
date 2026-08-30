@@ -1,0 +1,13 @@
+{
+  "name": "ROTAS MUNDIVOX",
+  "short_name": "ROTAS",
+  "description": "Assistente técnico de rotas ópticas MUNDIVOX",
+  "lang": "pt-BR",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#006d9c",
+  "background_color": "#edf5f9",
+  "icons": [{ "src": "/app-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

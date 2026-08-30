@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">Ícone ROTAS MUNDIVOX</title>
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#006d9c"/><stop offset="1" stop-color="#063658"/></linearGradient><linearGradient id="globe" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#45d8e7"/><stop offset="1" stop-color="#3772e6"/></linearGradient></defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <path d="M91 110h330v292H91z" fill="none" stroke="#fff" stroke-width="18" stroke-linecap="round" stroke-dasharray="2 33" opacity=".2"/>
+  <circle cx="256" cy="230" r="116" fill="url(#globe)" stroke="#fff" stroke-width="10"/>
+  <path d="M140 230h232M256 114c46 48 62 154 0 232M256 114c-46 48-62 154 0 232M165 164c53 32 129 32 182 0M165 296c53-32 129-32 182 0" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" opacity=".9"/>
+  <path d="M125 390h262" stroke="#fff" stroke-width="14" stroke-linecap="round" opacity=".92"/>
+  <text x="256" y="447" fill="#fff" font-family="Arial,Helvetica,sans-serif" font-size="42" font-weight="800" text-anchor="middle" letter-spacing="5">ROTAS</text>
+</svg>

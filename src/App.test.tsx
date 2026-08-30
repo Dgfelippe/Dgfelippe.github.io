@@ -30,6 +30,8 @@ describe('ROTAS MUNDIVOX application shell', () => {
     expect(
       screen.getByText('Desenvolvido por Diogo Felippe Do Nascimento'),
     ).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Exportar backup' })).toBeVisible()
+    expect(screen.getByLabelText('Restaurar backup')).toBeVisible()
 
     await user.click(
       screen.getByRole('button', { name: 'Ativar tema noturno' }),
@@ -55,6 +57,8 @@ describe('ROTAS MUNDIVOX application shell', () => {
     expect(await screen.findByDisplayValue('98216')).toBeVisible()
     expect(screen.getByDisplayValue('CDI BARRA PRODUTOS IMPORTADOS LTDA')).toBeVisible()
     expect(screen.getByText('CEO-RJO-0001')).toBeVisible()
+    expect(screen.getByRole('combobox', { name: 'Selecionar endereço importado' })).toBeVisible()
+    expect(screen.getByText('Dados compatíveis: OS 98216')).toBeVisible()
 
     await user.click(screen.getByRole('button', { name: 'Salvar ordem de serviço' }))
 
@@ -94,5 +98,18 @@ describe('ROTAS MUNDIVOX application shell', () => {
     await user.type(screen.getByRole('spinbutton', { name: 'Número global da fibra' }), '19')
     expect(screen.getByText('Grupo 2')).toBeVisible()
     expect(screen.getByText('Fibra 7 (Global 19)')).toBeVisible()
+  })
+
+  it('blocks saving when the ERP and PDF identify different service orders', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: /Importar nova OS/i }))
+    await user.upload(screen.getByLabelText('Foto ou print do ERP'), new File(['image'], 'erp.png', { type: 'image/png' }))
+    await user.upload(screen.getByLabelText('PDF do ConnectMaster'), new File(['pdf'], '98533_rota.pdf', { type: 'application/pdf' }))
+
+    expect(await screen.findByText('Atenção: o ERP indica OS 98216, mas o PDF indica OS 98533.')).toBeVisible()
+    await user.click(screen.getByRole('button', { name: 'Salvar ordem de serviço' }))
+    expect(screen.getByText('Confira a divergência entre ERP e PDF antes de salvar.')).toBeVisible()
   })
 })
