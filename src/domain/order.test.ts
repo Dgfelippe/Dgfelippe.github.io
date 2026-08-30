@@ -1,0 +1,38 @@
+import { describe, expect, it } from 'vitest'
+
+import { ServiceOrderSchema } from './order'
+
+describe('ServiceOrderSchema', () => {
+  it('accepts a complete service order with an ordered optical route', () => {
+    const parsed = ServiceOrderSchema.parse({
+      id: 'os-98216',
+      code: '98216',
+      customer: 'CDI BARRA PRODUTOS',
+      address: 'Rua Ipadu, 520 - Jacarepaguá',
+      building: '9858 - IPADU 520',
+      rack: 'Rack 44U-RJO-152>01<DGO-144F-RJO-016',
+      slot: '1',
+      switchPort: '1/1/9',
+      switchIp: '10.10.8.233',
+      createdAt: '2026-08-30T12:00:00.000Z',
+      updatedAt: '2026-08-30T12:00:00.000Z',
+      rawErpText: 'texto ERP',
+      rawRouteText: 'texto ConnectMaster',
+      warnings: [],
+      segments: [{
+        sequence: 0,
+        address: 'IPADU 520',
+        component: 'TOA 2F-97966',
+        cable: '12F-9858',
+        point: 'Fibra01',
+        opticalLengthMeters: 81.27,
+      }],
+    })
+
+    expect(parsed.segments[0].sequence).toBe(0)
+  })
+
+  it('rejects an order without a code or route segment address', () => {
+    expect(() => ServiceOrderSchema.parse({ code: '', segments: [] })).toThrow()
+  })
+})
