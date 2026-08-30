@@ -90,6 +90,20 @@ O armazenamento será acessado por um repositório isolado da interface. Migraç
 7. **Histórico:** pesquisa, edição, duplicação e exclusão confirmada.
 8. **Configurações:** tema, idioma do crédito, backup, restauração e informações do aplicativo.
 
+## Equivalência funcional com o protótipo Assist-Fibra
+
+O fluxo de campo comprovado no protótipo antigo será preservado dentro da nova identidade visual:
+
+- pesquisa imediata por código da OS ou nome do cliente;
+- acesso rápido às OSs salvas;
+- seleção de qualquer endereço/trecho da rota em uma lista ordenada;
+- painel simultâneo de equipamento/switch e caixa/cabo/ponto;
+- abertura do endereço selecionado no Google Maps e no Waze;
+- cálculo ABNT interativo de 1 a 144, atualizado automaticamente pela fibra do trecho;
+- alternância rápida entre locais sem sair da OS ativa.
+
+Ao contrário do protótipo, esses recursos usarão o banco IndexedDB e os dados realmente importados. Nenhuma OS será criada com valores fictícios, e uma importação parcial poderá ser salva como pendente para não perder informações digitadas em campo.
+
 ## Navegação externa
 
 - Google Maps e Waze em Android.

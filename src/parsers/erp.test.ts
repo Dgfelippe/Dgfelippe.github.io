@@ -31,4 +31,16 @@ describe('ERP parser', () => {
     expect(result.switchIp.value).toBeNull()
     expect(result.warnings).toContain('IP do switch não identificado; revise manualmente.')
   })
+
+  it('understands common OCR variations for OS, rack and slot', () => {
+    const result = parseErpText(`
+      Nº da O.S. 98533
+      Rack / DGO Rack 44U-RJO-204>03<DGO-144F (3U)-RJO-029
+      Slot / Módulo 2
+    `)
+
+    expect(result.orderCode.value).toBe('98533')
+    expect(result.rack.value).toBe('Rack 44U-RJO-204>03<DGO-144F (3U)-RJO-029')
+    expect(result.slot.value).toBe('2')
+  })
 })

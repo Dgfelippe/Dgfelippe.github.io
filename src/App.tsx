@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import './App.css'
+import { OrderDetails } from './components/OrderDetails'
 import { createOrderRepository } from './data/orderRepository'
 import type { RouteSegment, ServiceOrder } from './domain/order'
 import { parseConnectMasterText } from './parsers/connectMaster'
@@ -13,21 +14,25 @@ const emptyForm: FormData = { code: '', customer: '', address: '', building: '',
 
 function App() {
   const [theme, setTheme] = useState<Theme>('sun')
-  const [view, setView] = useState<'home' | 'import'>('home')
+  const [view, setView] = useState<'home' | 'import' | 'detail'>('home')
+  const [selectedOrder, setSelectedOrder] = useState<ServiceOrder | null>(null)
   const [form, setForm] = useState(emptyForm)
   const [segments, setSegments] = useState<RouteSegment[]>([])
   const [rawErpText, setRawErpText] = useState('')
   const [rawRouteText, setRawRouteText] = useState('')
   const [warnings, setWarnings] = useState<string[]>([])
   const [orders, setOrders] = useState<ServiceOrder[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
   const [busy, setBusy] = useState('')
   const [message, setMessage] = useState('')
   const repository = useRef(createOrderRepository())
+  const filteredOrders = orders.filter((order) => `${order.code} ${order.customer}`.toLocaleLowerCase('pt-BR').includes(searchQuery.trim().toLocaleLowerCase('pt-BR')))
 
   useEffect(() => document.documentElement.setAttribute('data-theme', theme), [theme])
   useEffect(() => {
     const current = repository.current
     current.list().then(setOrders).catch(() => undefined)
+    return () => current.close()
   }, [])
 
   const update = (key: keyof FormData, value: string) => setForm((current) => ({ ...current, [key]: value }))
@@ -60,30 +65,39 @@ function App() {
   }
 
   async function saveOrder() {
-    if (!form.code || !form.customer || !form.address || segments.length === 0) {
-      setMessage('Preencha OS, cliente e endereço, e importe uma rota válida.')
+    if (!form.code.trim()) {
+      setMessage('Informe pelo menos o número da OS para salvar.')
       return
     }
-    const timestamp = new Date().toISOString()
-    const existing = await repository.current.findByCode(form.code)
-    await repository.current.save({ ...form, id: existing?.id ?? crypto.randomUUID(), createdAt: existing?.createdAt ?? timestamp, updatedAt: timestamp, rawErpText, rawRouteText, warnings: [...new Set(warnings)], segments })
-    setOrders(await repository.current.list())
-    setMessage(`OS ${form.code} salva neste aparelho.`)
-    setView('home')
+    setBusy('Salvando no aparelho…')
+    try {
+      const timestamp = new Date().toISOString()
+      const existing = await repository.current.findByCode(form.code)
+      const saveWarnings = [...warnings]
+      if (!form.customer) saveWarnings.push('Cliente pendente de revisão.')
+      if (!form.address) saveWarnings.push('Endereço pendente de revisão.')
+      if (segments.length === 0) saveWarnings.push('Rota ConnectMaster pendente de revisão.')
+      await repository.current.save({ ...form, code: form.code.trim(), id: existing?.id ?? crypto.randomUUID(), createdAt: existing?.createdAt ?? timestamp, updatedAt: timestamp, rawErpText, rawRouteText, warnings: [...new Set(saveWarnings)], segments })
+      setOrders(await repository.current.list())
+      setMessage(`OS ${form.code.trim()} salva neste aparelho.`)
+      setView('home')
+    } catch {
+      setMessage('Falha ao salvar a OS. Os dados continuam na tela; tente novamente.')
+    } finally { setBusy('') }
   }
 
   return <div className="app-shell">
     <header className="topbar">
-      <a className="brand" href="#inicio" aria-label="Ir para o início" onClick={() => setView('home')}><img src={theme === 'night' ? '/branding/mundivox-brand-dark.svg' : '/branding/mundivox-brand.svg'} alt="MUNDIVOX" /><span><strong>ROTAS MUNDIVOX</strong><small>Assistente técnico de campo</small></span></a>
+      <a className="brand" href="#inicio" aria-label="Ir para o início" onClick={() => { setSelectedOrder(null); setView('home') }}><img src={theme === 'night' ? '/branding/mundivox-brand-dark.svg' : '/branding/mundivox-brand.svg'} alt="MUNDIVOX" /><span><strong>ROTAS MUNDIVOX</strong><small>Assistente técnico de campo</small></span></a>
       <button className="theme-toggle" type="button" onClick={() => setTheme(theme === 'sun' ? 'night' : 'sun')} aria-label={theme === 'sun' ? 'Ativar tema noturno' : 'Ativar tema solar'}><span aria-hidden="true">{theme === 'sun' ? '☾' : '☀'}</span>{theme === 'sun' ? 'Modo noturno' : 'Modo solar'}</button>
     </header>
     <main id="inicio" className="content">
       {message && <div className="notice" role="status">{message}</div>}
       {view === 'home' ? <>
         <section className="welcome-card"><div><p className="eyebrow">Operação local e segura</p><h1>ROTAS MUNDIVOX</h1><p className="welcome-copy">Importe sua ordem de serviço e a rota óptica para trabalhar com rapidez, precisão e acesso offline.</p></div><div className="status-pill"><span aria-hidden="true" />Pronto para uso</div></section>
-        <section className="quick-actions" aria-label="Ações principais"><button className="action-card action-card--primary" type="button" onClick={() => { setMessage(''); setView('import') }}><span className="action-icon" aria-hidden="true">＋</span><span><strong>Importar nova OS</strong><small>Print ERP e PDF ConnectMaster</small></span></button><button className="action-card" type="button" onClick={() => document.querySelector('#recent-title')?.scrollIntoView()}><span className="action-icon" aria-hidden="true">⌕</span><span><strong>Consultar histórico</strong><small>OSs salvas neste aparelho</small></span></button></section>
-        <section className="empty-state" aria-labelledby="recent-title"><div className="section-heading"><div><p className="eyebrow">Acesso rápido</p><h2 id="recent-title">Ordens recentes</h2></div><span className="offline-badge">Disponível offline</span></div>{orders.length ? <div className="order-list">{orders.map((order) => <article className="order-item" key={order.id}><strong>OS {order.code}</strong><span>{order.customer}</span><small>{order.address} · {order.segments.length} trecho(s)</small></article>)}</div> : <div className="empty-body"><span className="route-symbol" aria-hidden="true">⌁</span><strong>Nenhuma OS salva ainda</strong><p>Importe o primeiro atendimento para iniciar seu histórico.</p></div>}</section>
-      </> : <section className="import-panel">
+        <section className="quick-actions" aria-label="Ações principais"><button className="action-card action-card--primary" type="button" onClick={() => { setForm(emptyForm); setSegments([]); setRawErpText(''); setRawRouteText(''); setWarnings([]); setMessage(''); setView('import') }}><span className="action-icon" aria-hidden="true">＋</span><span><strong>Importar nova OS</strong><small>Print ERP e PDF ConnectMaster</small></span></button><button className="action-card" type="button" onClick={() => document.querySelector('#recent-title')?.scrollIntoView()}><span className="action-icon" aria-hidden="true">⌕</span><span><strong>Consultar histórico</strong><small>OSs salvas neste aparelho</small></span></button></section>
+        <section className="empty-state" aria-labelledby="recent-title"><div className="section-heading"><div><p className="eyebrow">Acesso rápido</p><h2 id="recent-title">Ordens salvas</h2></div><span className="offline-badge">Disponível offline</span></div>{orders.length ? <><div className="history-search"><label htmlFor="history-query">Pesquisar OS ou cliente</label><input id="history-query" type="search" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Ex.: 98216 ou nome do cliente" /></div>{filteredOrders.length ? <div className="order-list">{filteredOrders.map((order) => <button className="order-item" aria-label={`Abrir OS ${order.code}`} type="button" key={order.id} onClick={() => { setSelectedOrder(order); setView('detail') }}><strong>OS {order.code}</strong><span>{order.customer || 'Cliente pendente'}</span><small>{order.address || 'Endereço pendente'} · {order.segments.length} trecho(s)</small><div className="order-meta"><span>Rack: {order.rack || '—'}</span><span>Slot: {order.slot || '—'}</span></div></button>)}</div> : <p className="no-results">Nenhuma OS encontrada.</p>}</> : <div className="empty-body"><span className="route-symbol" aria-hidden="true">⌁</span><strong>Nenhuma OS salva ainda</strong><p>Importe o primeiro atendimento para iniciar seu histórico.</p></div>}</section>
+      </> : view === 'import' ? <section className="import-panel">
         <div className="section-heading"><div><p className="eyebrow">Nova ordem de serviço</p><h1>Importar e revisar</h1></div><button className="secondary-button" type="button" onClick={() => setView('home')}>Voltar</button></div>
         <div className="upload-grid"><label className="upload-box">Foto ou print do ERP<input aria-label="Foto ou print do ERP" type="file" accept="image/*" capture="environment" onChange={(event) => readErp(event.target.files?.[0])} /><small>Use uma imagem nítida ou tire uma foto</small></label><label className="upload-box">PDF do ConnectMaster<input aria-label="PDF do ConnectMaster" type="file" accept="application/pdf,.pdf" onChange={(event) => readRoute(event.target.files?.[0])} /><small>Selecione o relatório da rota óptica</small></label></div>
         {busy && <div className="notice" role="status">{busy}</div>}
@@ -91,7 +105,7 @@ function App() {
         <div className="route-review"><h2>Trechos reconhecidos</h2>{segments.length ? segments.map((segment) => <article className="segment" key={segment.sequence}><span>{segment.sequence + 1}</span><div><strong>{segment.component}</strong><small>{segment.address}</small><small>{segment.cable} · {segment.point} · {segment.opticalLengthMeters ?? '—'} m</small></div></article>) : <p>Nenhuma rota importada ainda.</p>}</div>
         {warnings.length > 0 && <div className="warning-box"><strong>Revise estes pontos</strong>{warnings.map((warning, index) => <p key={`${warning}-${index}`}>{warning}</p>)}</div>}
         <button className="save-button" type="button" onClick={saveOrder}>Salvar ordem de serviço</button>
-      </section>}
+      </section> : selectedOrder ? <OrderDetails order={selectedOrder} onBack={() => setView('home')} /> : null}
     </main>
     <footer className="footer"><span>ROTAS MUNDIVOX</span><span>Desenvolvido por Diogo Felippe Do Nascimento</span></footer>
   </div>

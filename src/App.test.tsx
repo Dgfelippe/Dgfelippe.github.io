@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -60,5 +60,39 @@ describe('ROTAS MUNDIVOX application shell', () => {
 
     expect(await screen.findByText('OS 98216 salva neste aparelho.')).toBeVisible()
     expect(screen.getByText('CDI BARRA PRODUTOS IMPORTADOS LTDA')).toBeVisible()
+    expect(screen.getByText('Rack: RACK-01')).toBeVisible()
+    expect(screen.getByText('Slot: 1')).toBeVisible()
+
+    cleanup()
+    render(<App />)
+
+    expect(await screen.findByText('OS 98216')).toBeVisible()
+    expect(screen.getByText('Rack: RACK-01')).toBeVisible()
+    expect(screen.getByText('Slot: 1')).toBeVisible()
+
+    await user.type(screen.getByRole('searchbox', { name: 'Pesquisar OS ou cliente' }), 'inexistente')
+    expect(screen.getByText('Nenhuma OS encontrada.')).toBeVisible()
+    await user.clear(screen.getByRole('searchbox', { name: 'Pesquisar OS ou cliente' }))
+
+    await user.click(screen.getByRole('button', { name: 'Abrir OS 98216' }))
+
+    expect(screen.getByRole('heading', { name: 'Detalhes da OS 98216' })).toBeVisible()
+    expect(screen.getByText('10.10.8.233')).toBeVisible()
+    expect(screen.getByText(/12F-RJO-0001/)).toBeVisible()
+    expect(screen.getByRole('link', { name: 'Abrir endereço no mapa' })).toHaveAttribute(
+      'href',
+      expect.stringContaining('google.com/maps/search'),
+    )
+    expect(screen.getByRole('link', { name: 'Abrir no Waze' })).toHaveAttribute(
+      'href',
+      expect.stringContaining('waze.com/ul'),
+    )
+    expect(screen.getByRole('spinbutton', { name: 'Número global da fibra' })).toHaveValue(3)
+    expect(screen.getByText('Fibra 3 (Global 3)')).toBeVisible()
+
+    await user.clear(screen.getByRole('spinbutton', { name: 'Número global da fibra' }))
+    await user.type(screen.getByRole('spinbutton', { name: 'Número global da fibra' }), '19')
+    expect(screen.getByText('Grupo 2')).toBeVisible()
+    expect(screen.getByText('Fibra 7 (Global 19)')).toBeVisible()
   })
 })

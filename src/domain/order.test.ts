@@ -35,4 +35,16 @@ describe('ServiceOrderSchema', () => {
   it('rejects an order without a code or route segment address', () => {
     expect(() => ServiceOrderSchema.parse({ code: '', segments: [] })).toThrow()
   })
+
+  it('accepts a draft with no recognized route so field data is not lost', () => {
+    const parsed = ServiceOrderSchema.parse({
+      id: 'draft-98533', code: '98533', customer: 'Cliente em revisão',
+      address: 'Endereço a revisar', building: '', rack: 'RACK-02', slot: '2',
+      switchPort: '', switchIp: '', createdAt: '2026-08-30T12:00:00.000Z',
+      updatedAt: '2026-08-30T12:00:00.000Z', rawErpText: '', rawRouteText: '',
+      warnings: ['Rota pendente'], segments: [],
+    })
+
+    expect(parsed.segments).toEqual([])
+  })
 })
