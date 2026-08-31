@@ -20,6 +20,17 @@ IP do switch: 10.10.8.233 Porta do switch: 1/1/9`),
 }))
 
 describe('ROTAS MUNDIVOX application shell', () => {
+  it('allows choosing an ERP image from the mobile gallery', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: /Importar nova OS/i }))
+
+    const erpImageInput = screen.getByLabelText('Imagem do ERP')
+    expect(erpImageInput).toHaveAttribute('accept', 'image/*')
+    expect(erpImageInput).not.toHaveAttribute('capture')
+  })
+
   it('shows the approved identity and changes to the night theme', async () => {
     const user = userEvent.setup()
     render(<App />)
@@ -48,7 +59,7 @@ describe('ROTAS MUNDIVOX application shell', () => {
 
     await user.click(screen.getByRole('button', { name: /Importar nova OS/i }))
     await user.upload(
-      screen.getByLabelText('Foto ou print do ERP'),
+      screen.getByLabelText('Imagem do ERP'),
       new File(['image'], 'erp.png', { type: 'image/png' }),
     )
     await user.upload(
@@ -107,7 +118,7 @@ describe('ROTAS MUNDIVOX application shell', () => {
     render(<App />)
 
     await user.click(screen.getByRole('button', { name: /Importar nova OS/i }))
-    await user.upload(screen.getByLabelText('Foto ou print do ERP'), new File(['image'], 'erp.png', { type: 'image/png' }))
+    await user.upload(screen.getByLabelText('Imagem do ERP'), new File(['image'], 'erp.png', { type: 'image/png' }))
     await user.upload(screen.getByLabelText('PDF do ConnectMaster'), new File(['pdf'], '98533_rota.pdf', { type: 'application/pdf' }))
 
     expect(await screen.findByText('Atenção: o ERP indica OS 98216, mas o PDF indica OS 98533.')).toBeVisible()
