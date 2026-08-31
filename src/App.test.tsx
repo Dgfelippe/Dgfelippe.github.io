@@ -32,6 +32,8 @@ describe('ROTAS MUNDIVOX application shell', () => {
     ).toBeVisible()
     expect(screen.getByRole('button', { name: 'Exportar backup' })).toBeVisible()
     expect(screen.getByLabelText('Restaurar backup')).toBeVisible()
+    expect(screen.getByRole('heading', { name: 'Calcular distância' })).toBeVisible()
+    expect(screen.getByLabelText('Endereço de destino')).toBeVisible()
 
     await user.click(
       screen.getByRole('button', { name: 'Ativar tema noturno' }),

@@ -1,32 +1,43 @@
-# React + TypeScript + Vite
+# ROTAS MUNDIVOX
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Aplicativo de apoio ao trabalho técnico de campo, com importação de ERP e ConnectMaster, histórico local, identificação ABNT, temas solar/noturno, backup e funcionamento offline.
 
-Currently, two official plugins are available:
+## Executar no Windows
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```powershell
+pnpm install
+pnpm dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## Distância real pelas ruas
+
+A função de distância usa a biblioteca oficial Routes da Google Maps JavaScript API. A origem vem da geolocalização atual autorizada pelo usuário. O destino digitado é geocodificado pela própria Routes API, e o aplicativo exibe exclusivamente o campo `distanceMeters` retornado pela rota real no modo de condução.
+
+Não é utilizada distância em linha reta, estimativa manual, valor fixo ou dado inventado.
+
+No Google Cloud, é necessário:
+
+1. Criar ou selecionar um projeto com faturamento habilitado.
+2. Ativar **Maps JavaScript API**.
+3. Ativar **Routes API**.
+4. Criar uma chave de API para website.
+5. Restringir a chave aos endereços autorizados do aplicativo, incluindo o endereço local durante o desenvolvimento e o domínio definitivo após a hospedagem.
+6. Restringir o uso da chave somente a **Maps JavaScript API** e **Routes API**.
+
+Copie `.env.example` para `.env.local` e preencha a variável:
+
+```dotenv
+VITE_GOOGLE_MAPS_API_KEY=sua_chave_restrita
+```
+
+Nunca envie `.env.local` ao Git e nunca escreva uma chave real diretamente no código. Em aplicações web, a chave é usada pelo navegador; portanto, as restrições de website e de APIs no Google Cloud são obrigatórias para evitar uso indevido.
+
+## Verificações
+
+```powershell
+pnpm test
+pnpm lint
+pnpm build
+```
+
+O cálculo real exige HTTPS ou `localhost`, permissão de localização e acesso à internet. As demais funções locais do aplicativo continuam disponíveis offline.
