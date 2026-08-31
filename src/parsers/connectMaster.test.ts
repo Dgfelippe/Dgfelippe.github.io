@@ -97,3 +97,33 @@ RIO DE JANEIRO RIO DE JANEIRO IPADU 521 CEO-RJO-1293>1<Bandeja 144F 3 81.27
     expect(parseConnectMasterText('RIO DE JANEIRO RIO DE JANEIRO ÉDISON PASSOS 1142 CEO-RJO-0526>1<Bandeja 144F 26 3,419.78').orderCode).toBeNull()
   })
 })
+
+  it('reconhece relatório extraído pelo PDF.js com componente e cabo em linhas separadas', () => {
+    const result = parseConnectMasterText(`
+Relatório ConnectMaster - Ordem de Serviço: 98216
+Rua Ipadu, 520
+TOA 2F-97966
+12F-RJO-0001 Fibra03 180
+CEO-RJO-1293
+12F-RJO-2333 Fibra03 250
+    `)
+
+    expect(result.segments).toEqual([
+      {
+        sequence: 0,
+        address: 'Rua Ipadu, 520',
+        component: 'TOA 2F-97966',
+        cable: '12F-RJO-0001',
+        point: 'Fibra03',
+        opticalLengthMeters: 180,
+      },
+      {
+        sequence: 1,
+        address: 'Rua Ipadu, 520',
+        component: 'CEO-RJO-1293',
+        cable: '12F-RJO-2333',
+        point: 'Fibra03',
+        opticalLengthMeters: 250,
+      },
+    ])
+  })

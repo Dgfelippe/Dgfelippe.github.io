@@ -23,9 +23,17 @@ export interface ParsedErp {
   warnings: string[]
 }
 
+function normalizeOcrArtifacts(value: string): string {
+  return value
+    .replace(/\bl(?=[A-ZÀ-Ý])/g, '')
+    .replace(/(\d)[lI]\b/g, '$1')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 function field(value?: string | null, confidence = 0.95): ExtractedField {
-  const normalized = value?.replace(/\s+/g, ' ').trim() || null
-  return { value: normalized, confidence: normalized ? confidence : 0 }
+  const normalized = value ? normalizeOcrArtifacts(value) : null
+  return { value: normalized || null, confidence: normalized ? confidence : 0 }
 }
 
 function extract(text: string, pattern: RegExp, confidence = 0.95): ExtractedField {
@@ -51,9 +59,10 @@ export function parseErpText(rawText: string): ParsedErp {
   const header = extractHeader(lines)
   const labeledOrder = extract(text, /(?:Ordem\s*(?:de\s*)?Servi[cç]o|N[º°o]?\s*(?:da\s*)?O\.?\s*S\.?|O\.?\s*S\.?)\s*(?:n[º°o]?\s*)?[:#-]?\s*(\d{4,})/i)
   const labeledCustomer = extract(text, /^Cliente\s*:\s*([^\n]+)/im)
-  const customerAddress = extract(compact, /Endere[cç]o\s+do\s+cliente\s*:\s*(.*?)(?=Endere[cç]o\s+do\s+POP\s*:|Instru[cç][oõ]es\s+do\s+que\s+fazer\s*:|Servi[cç]o\s+|Ocorr[eê]ncia\s*:|Atividade\s*:|$)/i, 0.9)
-  const labeledAddress = extract(compact, /Endere[cç]o\s+Cliente\s*:\s*(.*?)(?=Contato\s*:|$)/i, 0.9)
-  const buildingAddress = extract(compact, /Endere[cç]o\s+Pr[eé]dio\s*:\s*(.*?)(?=Contato\s*:|$)/i, 0.88)
+  const addressBoundary = /Endere[cç]o\s+do\s+POP\s*:|Instru[cç][oõ]es\s+do\s+que\s+fazer\s*:|Servi[cç]o\s+|Ocorr[eê]ncia\s*:|Atividade\s*:|Contato\s*:|Rack\s*(?:\/\s*DGO)?\s*:|Slot\s*(?:\/\s*M[oó]dulo)?\s*:|IP\s+do\s+switch\s*:|Porta\s+do\s+switch\s*:|$/i
+  const customerAddress = extract(compact, new RegExp(String.raw`Endere[cç]o\s+(?:do\s+)?cliente\s*:\s*(.*?)(?:${addressBoundary.source})`, 'i'), 0.9)
+  const labeledAddress = customerAddress.value ? customerAddress : extract(compact, new RegExp(String.raw`Endere[cç]o\s+Cliente\s*:\s*(.*?)(?:${addressBoundary.source})`, 'i'), 0.9)
+  const buildingAddress = extract(compact, new RegExp(String.raw`Endere[cç]o\s+Pr[eé]dio\s*:\s*(.*?)(?:${addressBoundary.source})`, 'i'), 0.88)
   const explicitInstructions = extract(compact, /Instru[cç][oõ]es\s+do\s+que\s+fazer\s*:\s*(.*?)(?=Servi[cç]o\s+[A-Z]|Ocorr[eê]ncia\s*:|Atividade\s*:|$)/i, 0.88)
   const contactAsInstructions = extract(compact, /Contato\s*:\s*(.*?)(?=Ocorr[eê]ncia\s*:|Atividade\s*:|$)/i, 0.75)
 

@@ -111,3 +111,17 @@ Ocorrência: 2608291140183594 Atividade: 478771
     expect(result.activity.value).toBe('478771')
   })
 })
+
+  it('delimits address and normalizes common OCR noise when labels share one line', () => {
+    const result = parseErpText(`
+Ordem de Serviço: 98216
+Cliente: CDI BARRA PRODUTOS IMPORTADOS LTDA
+Prédio: 9858 - IPADU 520
+Endereço Cliente: Rua lIpadu, 520 Rack: RACK-01 Slot: 1l IP do switch: 10.10.8.233 Porta do switch: 1/1/9
+    `)
+
+    expect(result.address.value).toBe('Rua Ipadu, 520')
+    expect(result.rack.value).toBe('RACK-01')
+    expect(result.slot.value).toBe('1')
+    expect(result.switchIp.value).toBe('10.10.8.233')
+  })
