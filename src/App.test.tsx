@@ -1,13 +1,13 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import App from './App'
 
+const extractPdfTextMock = vi.hoisted(() => vi.fn())
+
 vi.mock('./parsers/pdfText', () => ({
-  extractPdfText: vi.fn(async () => `Ordem de Serviço: 98216
-Rua Ipadu, 520 CEO-RJO-0001 G1-F8 12
-12F-RJO-0001 Fibra03 180`),
+  extractPdfText: extractPdfTextMock,
 }))
 
 vi.mock('./parsers/ocr', () => ({
@@ -20,6 +20,12 @@ IP do switch: 10.10.8.233 Porta do switch: 1/1/9`),
 }))
 
 describe('ROTAS MUNDIVOX application shell', () => {
+  beforeEach(() => {
+    extractPdfTextMock.mockReset().mockResolvedValue(`Ordem de Serviço: 98216
+Rua Ipadu, 520 CEO-RJO-0001 G1-F8 12
+12F-RJO-0001 Fibra03 180`)
+  })
+
   it('allows choosing an ERP image from the mobile gallery', async () => {
     const user = userEvent.setup()
     render(<App />)
@@ -124,5 +130,21 @@ describe('ROTAS MUNDIVOX application shell', () => {
     expect(await screen.findByText('Atenção: o ERP indica OS 98216, mas o PDF indica OS 98533.')).toBeVisible()
     await user.click(screen.getByRole('button', { name: 'Salvar ordem de serviço' }))
     expect(screen.getByText('Confira a divergência entre ERP e PDF antes de salvar.')).toBeVisible()
+  })
+
+  it('shows the technical PDF error needed to diagnose an iPhone failure', async () => {
+    extractPdfTextMock.mockRejectedValueOnce(new Error('Promise.withResolvers is not a function'))
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: /Importar nova OS/i }))
+    await user.upload(
+      screen.getByLabelText('PDF do ConnectMaster'),
+      new File(['pdf'], 'rota.pdf', { type: 'application/pdf' }),
+    )
+
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'Detalhe técnico: Promise.withResolvers is not a function',
+    )
   })
 })
