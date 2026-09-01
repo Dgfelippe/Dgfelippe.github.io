@@ -75,7 +75,10 @@ function App() {
       const routeRack = parsed.segments.find((segment) => /^Rack\b/i.test(segment.component))?.component
       setForm((current) => ({ ...current, code: routeOrderCode ?? current.code, rack: current.rack || routeRack || '', address: current.address || parsed.segments[0]?.address || '' }))
       setWarnings((current) => [...current, ...parsed.warnings])
-    } catch { setMessage('Não foi possível ler o PDF. Confirme se é um relatório ConnectMaster válido.') }
+    } catch (error) {
+      const detail = error instanceof Error && error.message.trim() ? error.message.trim().slice(0, 160) : 'erro desconhecido'
+      setMessage(`Não foi possível ler o PDF. Confirme se é um relatório ConnectMaster válido. Detalhe técnico: ${detail}`)
+    }
     finally { setBusy('') }
   }
 
