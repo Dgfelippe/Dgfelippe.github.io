@@ -42,6 +42,6 @@ pnpm build
 
 ## Compatibilidade móvel
 
-O leitor de PDF usa a distribuição `legacy` do PDF.js para compatibilidade com Safari 18+ no iOS e navegadores Android atuais.
+O leitor de PDF usa uma versão fixa e segura da distribuição `legacy` do PDF.js, compilada para Safari 15+, para evitar APIs JavaScript ausentes em versões do WebKit usadas no iPhone. O cache do aplicativo é renovado a cada alteração de compatibilidade.
 
 O cálculo real exige HTTPS ou `localhost`, permissão de localização e acesso à internet. As demais funções locais do aplicativo continuam disponíveis offline.
