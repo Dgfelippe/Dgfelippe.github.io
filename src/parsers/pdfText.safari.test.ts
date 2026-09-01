@@ -32,6 +32,36 @@ function createPdfWithText(text: string): ArrayBuffer {
 }
 
 describe('PDF text extraction on Safari-compatible browsers', () => {
+  it('extracts text when Promise.withResolvers is unavailable on older iOS WebKit', async () => {
+    const promiseConstructor = Promise as PromiseConstructor & {
+      withResolvers?: () => unknown
+    }
+    const originalWithResolvers = promiseConstructor.withResolvers
+
+    try {
+      Object.defineProperty(Promise, 'withResolvers', {
+        configurable: true,
+        value: undefined,
+        writable: true,
+      })
+
+      const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs')
+      pdfjs.GlobalWorkerOptions.workerSrc = pathToFileURL(
+        resolve('node_modules/pdfjs-dist/legacy/build/pdf.worker.min.mjs'),
+      ).href
+
+      await expect(
+        extractPdfTextWithPdfJs(createPdfWithText('OS 87729'), pdfjs),
+      ).resolves.toContain('OS 87729')
+    } finally {
+      Object.defineProperty(Promise, 'withResolvers', {
+        configurable: true,
+        value: originalWithResolvers,
+        writable: true,
+      })
+    }
+  })
+
   it('extracts text from a real PDF with the Safari-compatible build', async () => {
     const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs')
     pdfjs.GlobalWorkerOptions.workerSrc = pathToFileURL(
