@@ -40,4 +40,8 @@ pnpm lint
 pnpm build
 ```
 
+## Compatibilidade móvel
+
+O leitor de PDF usa a distribuição `legacy` do PDF.js para compatibilidade com Safari 18+ no iOS e navegadores Android atuais.
+
 O cálculo real exige HTTPS ou `localhost`, permissão de localização e acesso à internet. As demais funções locais do aplicativo continuam disponíveis offline.
