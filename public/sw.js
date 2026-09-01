@@ -1,4 +1,4 @@
-const CACHE = 'rotas-mundivox-v2'
+const CACHE = 'rotas-mundivox-v3'
 const CORE = ['/', '/index.html', '/manifest.webmanifest', '/app-icon.svg', '/branding/mundivox-brand.svg', '/branding/mundivox-brand-dark.svg']
 
 async function cacheResponse(request, response) {
